@@ -6,63 +6,55 @@ message = "hello world"
 binary_value = [format(ord(char), '08b') for char in message]
 print(binary_value)
 
+
 # Adding the one bit
 binary_str = ''.join(binary_value)
 binary_str_with_one = binary_str + '1'
-
 print(binary_str_with_one)
 
 
 # Padding to 448 bits
-
 target_length = 448
 current_length = len(binary_str_with_one)
 zeros_to_add = target_length - current_length
 # print(zeros_to_add)
-
 padded_binary_str = binary_str_with_one + ('0' * zeros_to_add)
-
 print(padded_binary_str)
 
-# Adding the 64 bit encoding
 
+# Adding the 64 bit encoding
 original_length = 88
 original_length_bin = format(original_length, '064b')
-
 # print(original_length_bin)
-
 final_binary_str = padded_binary_str + original_length_bin
-
 print(final_binary_str)
 
 
-# Converting the 512 bit into 16, 32 bit blocks
-
+# Converting the 512 bit into 16 32 bit blocks
 blocks = [final_binary_str[i:i+32] for i in range(0, 512, 32)]
-
 for idx, block in enumerate(blocks):
     print(f'Message {idx:2}: {block}')
 
 
+# Message Schedule 
 def rightrotate(x, n):
     return ((x >> n) | (x << (32 - n))) & 0xFFFFFFFF
 
-# 'blocks' previously created (list of 16, 32-bit binary strings)
+# For the first 16 messages
 W = [int(b, 2) for b in blocks]
 
-# Extend the first 16 words into the remaining 48 words
+# For the 48 messages remaning
 for i in range(16, 64):
     s0 = (rightrotate(W[i-15], 7)) ^ (rightrotate(W[i-15], 18)) ^ (W[i-15] >> 3)
     s1 = (rightrotate(W[i-2], 17)) ^ (rightrotate(W[i-2], 19)) ^ (W[i-2] >> 10)
     new_word = (W[i-16] + s0 + W[i-7] + s1) & 0xFFFFFFFF
     W.append(new_word)
-
-# Print message schedule (W[0..63])
+    
 for idx, word in enumerate(W):
     print(f"W[{idx:2}] = {word:032b}")
 
 
-# SHA-256 initial hash values (previously defined)
+# SHA-256 initial hash values
 H = [
     0x6a09e667,
     0xbb67ae85,
@@ -135,15 +127,15 @@ H[6] = (H[6] + g) & 0xFFFFFFFF
 H[7] = (H[7] + h) & 0xFFFFFFFF
 
 
-# Final SHA-256 hash (concatenate H0 to H7)
+# Final SHA-256 hash
 sha256_hash = ''.join(f'{value:08x}' for value in H)
-
 print(f"SHA-256 hash: {sha256_hash}")
 
 
-import hashlib
 
-message = "hello world"
-sha256_hash_lib = hashlib.sha256(message.encode()).hexdigest()
+# import hashlib
 
-print(sha256_hash_lib)
+# message = "hello world"
+# sha256_hash_lib = hashlib.sha256(message.encode()).hexdigest()
+
+# print(sha256_hash_lib)
